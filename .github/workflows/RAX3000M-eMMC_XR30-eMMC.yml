@@ -117,13 +117,21 @@ jobs:
         cd openwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
         
-    - name:  应用cmcc_xr30-emmc.patch & 更新安装 feeds
+    - name:  应用cmcc_xr30-emmc.patch & 更新 feeds & 并删除 mosdns 的冲突包
       run: |
         cp RAX3000M-eMMC_XR30-eMMC/cmcc_xr30-emmc.patch openwrt/cmcc_xr30-emmc.patch
         cd openwrt
         git apply cmcc_xr30-emmc.patch
-        ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        ./scripts/feeds update -a && rm -rf feeds/luci/applications/luci-app-mosdns
+
+    - name: Modify for some packages & 删除冲突包并从指定源下载 golang 重新编译
+      run: cd openwrt && 
+           rm -rf feeds/packages/net/{alist,adguardhome,xray*,v2ray*,v2ray*,sing*,smartdns} && 
+           rm -rf feeds/packages/lang/golang && 
+           git clone https://github.com/kenzok8/golang feeds/packages/lang/golang
+           
+    - name: Install feeds & 安装源
+      run: cd openwrt && ./scripts/feeds install -a
         
     - name: 加载config & DIY_P2_SH
       run: |
